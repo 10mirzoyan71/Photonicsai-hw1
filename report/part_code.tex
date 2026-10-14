@@ -1,0 +1,150 @@
+%======================================================================
+\section*{Task 5. PINN for the Silverbox oscillator}
+%======================================================================
+\textbf{Code:} \url{\repourl}, folder \texttt{task5\_pinn\_silverbox/}\\
+(\texttt{silverbox\_pinn.py}: data, network, RK4, training, metric; \texttt{sweep.py}: all runs below;
+\texttt{make\_figures.py}: plots and this section's numbers). PyTorch, float64.
+
+\subsection*{Data}
+\texttt{SNLS80mV.mat}, $u=$ \texttt{V1}, $y=$ \texttt{V2}, slice $[42650:46746]$ (4096 samples), each signal centred by its mean
+on the excerpt ($\bar u=6.66$\,mV, $\bar y=1.32$\,mV). Train: samples $0$--$3071$ (5.03\,s); test: $3072$--$4095$ (1.68\,s).
+The output spectrum peaks at 70.0\,Hz, the input band ends at 200\,Hz, the RMS of the test output is $60.49$\,mV (the zero
+predictor). One property of this split decides the design: \textbf{the test segment reaches $|y|=0.205$\,V while the training
+record never exceeds $0.174$\,V}, so on the largest test peak the force has to be extrapolated exactly where the cubic term is
+strongest.
+
+\subsection*{Model}
+Equation (1), $\ddot y+a\dot y+by+cy^3=g\,u(t)$, in state form with $v=\dot y$:
+\[
+\dot y=v,\qquad \dot v=\alpha_\theta(y,v,u),
+\]
+where $\alpha_\theta$ is a fully connected network. \emph{Scaling:} the inputs are $(y/\sigma_y,\ v/\sigma_v,\ u/\sigma_u)$ and
+the raw output is multiplied by $\sigma_a$, the standard deviations on the training record ($\sigma_y=53.0$\,mV,
+$\sigma_v=22.4$\,V/s, $\sigma_u=22.0$\,mV, $\sigma_a=1.04\cdot10^{4}$\,V/s$^2$), so every input and the target are $O(1)$.
+Architectures tried: A1 $2\times32$ tanh, A2 $2\times64$ tanh, A3 $3\times64$ tanh, A4 $2\times64$ SiLU (all with a linear output).
+
+\emph{Integrator:} classical RK4 at $\Delta t=1/f_s$, driven by the measured input: stage 1 uses $u_k$, stages 2--3 use
+$u(t_k+\Delta t/2)$, stage 4 uses $u_{k+1}$. The half-sample values come from a 16-tap Hann-windowed sinc interpolator of the
+measured $u$ (the input is a multisine up to 200\,Hz, where the plain average $(u_k+u_{k+1})/2$ would keep only
+$\cos(\pi\cdot200/610)\approx0.51$ of the amplitude); only $u$ is used, which is known on the whole excerpt.
+
+\subsection*{Training (only the 3072 training samples enter any loss)}
+\begin{enumerate}[leftmargin=*,itemsep=1pt]
+\item \textbf{Stage A, identify the equation.} The four coefficients of (1) are first fitted to the training record: least
+squares on finite-difference derivatives as the start, then the same rollout loss as in stage C (Adam, lr $3\cdot10^{-3}$,
+600 steps, rollout 256). This is run \texttt{R\_duffing} in the table; it gives
+$a=\identa$\,s$^{-1}$, $b=\identb$\,s$^{-2}$ ($f_0=\sqrt b/2\pi=68.4$\,Hz), $c=\identc$\,V$^{-2}$s$^{-2}$, $g=\identg$\,s$^{-2}$.
+At $|y|=0.2$\,V the cubic force is $cy^2/b=16\%$ of the linear force.
+\item \textbf{Stage B, residual pre-fit (collocation on the data).} 500 Adam steps on
+$\|\ddot y_\text{FD}-\alpha_\theta(y,\dot y_\text{FD},u)\|^2/\sigma_a^2$ with 4th-order central differences. It gives the network
+the right sign and size of the restoring force before any rollout.
+\item \textbf{Stage C, rollout training + PINN residual.} Each step draws 32 windows at random starts in the training record,
+starts each at the measured $y$ and the 4th-order finite-difference velocity, integrates with RK4 and penalises
+\[
+\mathcal L=\frac{1}{\sigma_y^2}\,\overline{(\hat y-y)^2}\;+\;\lambda_\text{phys}\,\frac{1}{\sigma_a^2}\,
+\overline{\big(\alpha_\theta(\tilde y,\tilde v,\tilde u)+a\tilde v+b\tilde y+c\tilde y^3-g\tilde u\big)^2},
+\]
+the second term on 512 collocation points per step drawn uniformly from a box $1.5\times$ the training maxima of $|y|,|v|,|u|$
+(it reaches $|y|=0.26$\,V, past the test peak). $a,b,c,g$ are the stage-A values, held fixed: they are not weights of the network,
+and only the network is integrated at test time. The rollout length grows geometrically from 16 to the final length over the
+first 40\% of the steps; cosine learning-rate decay to 5\%, gradient-norm clip 1. Every 100 steps the free run of the
+training record is computed, and the weights with the lowest \emph{training} free-run RMSE are kept for that run.
+\end{enumerate}
+
+\subsection*{Metric}
+After the weights are fixed: one free run of all 4096 samples from $y_0$ and the one-sided finite difference
+$v_0=(-3y_0+4y_1-y_2)/2\Delta t$, RK4 through the training samples and on through the test samples with the same state, reading
+$u$ only. RMSE on samples $3072$--$4095$ (test) and on $0$--$3071$ (train).
+
+\subsection*{Results}
+\begin{center}
+\fbox{\begin{minipage}{0.9\linewidth}\centering
+Kept version: \textbf{\keptnametex}\ \ (\keptarch, \keptparams\ weights)\\[2pt]
+\textbf{free-run RMSE on the test record (1024 samples): \kepttest\,mV}\\[1pt]
+free-run RMSE on the training record (3072 samples): \kepttrain\,mV\\[1pt]
+zero-prediction baseline on the test record: 60.49\,mV
+\end{minipage}}
+\end{center}
+\keptsettings
+
+All runs (sorted by name; highlighted: kept). ``train''/``test'' are the free-run RMSEs of the metric, in mV.
+A$k$\_h$j$ = architecture $k$ with training setting $j$; L\_* = ablation of the physics loss on A2\_h2; R\_* = references that are
+not networks (4 coefficients of eq.~(1), trained by the same rollout loss; R\_linear has $c=0$).
+{\footnotesize\setlength{\tabcolsep}{4pt}\sweeptable}
+
+\keptdiscussion
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../task5_pinn_silverbox/figures/test_segment.png}
+\caption{Measured output and free-run prediction of the kept network on the test segment, and the error.}
+\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../task5_pinn_silverbox/figures/test_peak_zoom.png}
+\includegraphics[width=\linewidth]{../task5_pinn_silverbox/figures/force_curve.png}
+\caption{Top: the largest test peak, outside the training amplitude range, with and without the physics loss.
+Bottom: the restoring force $\alpha_\theta(y,0,0)$; the network trained without the physics loss under-stiffens past the training range.}
+\end{figure}
+
+\paragraph{Physics read-out of the kept network.} Projecting $\alpha_\theta$ on the training states onto
+$\{-v,-y,-y^3,u\}$ by least squares gives $a=\reada$, $b=\readb$ ($f_0=\readfzero$\,Hz), $c=\readc$, $g=\readg$ with
+$R^2=\readrsq$: the network represents a Duffing-like force, in line with the stage-A identification.
+
+%======================================================================
+\section*{Task 6. Agentic system}
+%======================================================================
+\textbf{Code:} \url{\repourl}, folder \texttt{task6\_agentic\_system/}.\\
+Files: \texttt{agents.py} (state, prompts, nodes, graph),
+\texttt{coding\_tool.py}, \texttt{run\_task5.py} (gives the system Task 5), \texttt{render\_transcript.py},
+\texttt{tests/offline\_smoke\_test.py}. LangGraph, LangChain; the model behind the roles is chosen with \texttt{--model}.
+The run below used Claude Sonnet 5.5 through the Claude Code CLI (\texttt{--model claude-cli:claude-sonnet-5-5},
+\texttt{claude\_cli.py}), with the CLI's own tools switched off: decisions are its structured output, and the executor's
+coding-tool calls are requested as structured output and run by the executor node.
+
+\begin{center}
+\begin{tikzpicture}[>=Stealth, node distance=1.6cm,
+  box/.style={draw,thick,rounded corners,minimum width=26mm,minimum height=9mm,align=center,font=\small}]
+  \node[box,fill=blue!8] (o) {orchestrator\\\scriptsize decision = model call};
+  \node[box,left=2.4cm of o] (s) {START\\\scriptsize user turn};
+  \node[box,right=2.4cm of o] (e) {END};
+  \node[box,fill=green!8,below left=1.6cm and 0.4cm of o] (sc) {scientist\\\scriptsize theory + plan};
+  \node[box,fill=green!8,below=1.6cm of o] (g) {general\\\scriptsize side questions};
+  \node[box,fill=orange!12,below right=1.6cm and 0.4cm of o] (ex) {executor\\\scriptsize coding tool};
+  \draw[->,thick] (s) -- (o);
+  \draw[->,thick] (o) -- node[above,font=\scriptsize]{finish} (e);
+  \draw[->,thick] (o.south west) to[bend right=15] (sc.north);
+  \draw[->,thick] (sc.north east) to[bend right=15] (o.240);
+  \draw[->,thick] (o.265) -- (g.95);
+  \draw[->,thick] (g.85) -- (o.275);
+  \draw[->,thick] (o.south east) to[bend left=15] (ex.north);
+  \draw[->,thick] (ex.north west) to[bend left=15] (o.300);
+  \node[font=\scriptsize,align=left,right=0.3cm of ex] {write \texttt{*.py}\\run (300\,s limit)\\$\to$ exit code, stdout, stderr};
+\end{tikzpicture}
+\end{center}
+
+\paragraph{State.} The state of the \texttt{StateGraph} is the dialogue: a list of turns, each
+\texttt{\{role, content, meta\}} (role name, the text it said, and machine-readable fields such as the decision or the tool
+record), merged with \texttt{operator.add}, so every node reads all earlier turns, including what the other agents wrote, and
+appends exactly one turn. Routing, the decision count and the finish check are all derived from the dialogue itself.
+
+\paragraph{Edges.} \texttt{START}$\to$orchestrator; a conditional edge from the orchestrator to scientist, general, executor
+or \texttt{END}, chosen by the orchestrator's decision; an edge back from each specialist to the orchestrator.
+
+\paragraph{Orchestrator.} A model call with structured output \texttt{Decision(next\_role, instruction, reason)}, where
+\texttt{next\_role} $\in\{$scientist, general, executor, finish$\}$. It sees the whole dialogue plus a status line (decision
+$k$ of 8, whether a verified RMSE exists). It has no tool and its prompt forbids theory and code. Rules enforced in code:
+at most 8 decisions; \texttt{finish} is accepted only if some executor turn holds a \texttt{TEST\_RMSE} parsed from the standard
+output of a script that ran with exit code 0 --- otherwise the model is asked once more with the reason, and a second
+\texttt{finish} is routed to the executor.
+
+\paragraph{Scientist / general agent.} Model calls without tools. The scientist writes the equation, the network, the state
+equation, the training, the free-run test and a numbered implementation list, and may not quote a number that no executor turn
+printed. The general agent answers high-level side questions (what a record is, what a term or an error means) and writes no plan.
+
+\paragraph{Executor and the coding tool.} The only role bound to the tool \texttt{coding\_tool(action, filename, code)}:
+\texttt{write} creates a \emph{new} \texttt{.py} file in the run's working directory (existing names are refused, so every
+implementation and every repair is a new file); \texttt{run} executes it with a 300\,s limit and returns exit code, stdout and
+stderr. One write and one run per executor turn; the node appends a tool record (files, exit codes, the parsed
+\texttt{TEST\_RMSE}/\texttt{TRAIN\_RMSE} marked VERIFIED, or the stderr tail with the traceback). A later executor turn sees
+the previous script and can repair it; the plan stays the scientist's.
+
+\input{task6_run.tex}

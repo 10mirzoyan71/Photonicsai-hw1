@@ -1,0 +1,222 @@
+%======================================================================
+\section*{Task 1. Two networks a line cannot be}
+%======================================================================
+Every hidden unit below is a ReLU unit $h=\mathrm{ReLU}(w^\top x+b)$, every output is linear ($\sigma(z)=z$).
+
+\subsection*{(a) Absolute value \hfill (2 hidden ReLU units)}
+\[
+h_1=\mathrm{ReLU}(1\cdot x+0),\qquad h_2=\mathrm{ReLU}(-1\cdot x+0),\qquad \hat y = 1\cdot h_1+1\cdot h_2+0 .
+\]
+\begin{center}
+\begin{tikzpicture}[>=Stealth, node distance=2.2cm,
+  neuron/.style={circle,draw,thick,minimum size=11mm,align=center,font=\small},
+  lab/.style={font=\footnotesize,fill=white,inner sep=1pt}]
+  \node[neuron] (x) {$x$};
+  \node[neuron,right=2.6cm of x,yshift=1.0cm] (h1) {$h_1$\\[-2pt]\tiny ReLU};
+  \node[neuron,right=2.6cm of x,yshift=-1.0cm] (h2) {$h_2$\\[-2pt]\tiny ReLU};
+  \node[neuron,right=2.6cm of h1,yshift=-1.0cm] (y) {$\hat y$\\[-2pt]\tiny linear};
+  \draw[->,thick] (x) -- node[lab,above left]{$w=+1$} (h1);
+  \draw[->,thick] (x) -- node[lab,below left]{$w=-1$} (h2);
+  \draw[->,thick] (h1) -- node[lab,above right]{$+1$} (y);
+  \draw[->,thick] (h2) -- node[lab,below right]{$+1$} (y);
+  \node[font=\footnotesize,above=1pt of h1]{$b=0$};
+  \node[font=\footnotesize,below=1pt of h2]{$b=0$};
+  \node[font=\footnotesize,above=1pt of y]{$b=0$};
+\end{tikzpicture}
+\end{center}
+For $x\ge0$: $h_1=x$, $h_2=0$; for $x<0$: $h_1=0$, $h_2=-x$. In both cases $\hat y=|x|$ (two hinges joined at the origin).
+
+\begin{center}
+\begin{tabular}{@{}rrrrrr@{}}\toprule
+$x$ & $z_1=x$ & $h_1$ & $z_2=-x$ & $h_2$ & $\hat y=h_1+h_2$\\\midrule
+$-2$   & $-2$   & 0   & $2$    & 2   & 2\\
+$-0.5$ & $-0.5$ & 0   & $0.5$  & 0.5 & 0.5\\
+$0$    & 0      & 0   & 0      & 0   & 0\\
+$0.5$  & 0.5    & 0.5 & $-0.5$ & 0   & 0.5\\
+$3$    & 3      & 3   & $-3$   & 0   & 3\\\bottomrule
+\end{tabular}
+\end{center}
+Worked negative input, $x=-0.5$: unit 1 has pre-activation $z_1=1\cdot(-0.5)+0=-0.5$ and activation $h_1=\max(0,-0.5)=0$;
+unit 2 has $z_2=(-1)(-0.5)+0=0.5$ and $h_2=\max(0,0.5)=0.5$; output $\hat y=0+0.5=0.5=|-0.5|$.
+
+\emph{Two units are the minimum.} With one hidden unit the network is $\hat y=c\,\mathrm{ReLU}(wx+b)+d$, a monotone function of $x$
+(ReLU is nondecreasing, and $c$, $w$ only flip directions). $|x|$ decreases on $x<0$ and increases on $x>0$, so it is not monotone.
+
+\subsection*{(b) Exclusive or \hfill (2 hidden ReLU units, the units of (a) reused on $x_1-x_2$)}
+\[
+h_1=\mathrm{ReLU}(x_1-x_2+0),\qquad h_2=\mathrm{ReLU}(-x_1+x_2+0),\qquad \hat y=1\cdot h_1+1\cdot h_2+0=|x_1-x_2| .
+\]
+\begin{center}
+\begin{tikzpicture}[>=Stealth,
+  neuron/.style={circle,draw,thick,minimum size=11mm,align=center,font=\small},
+  lab/.style={font=\footnotesize,fill=white,inner sep=1pt}]
+  \node[neuron] (x1) at (0,1.0) {$x_1$};
+  \node[neuron] (x2) at (0,-1.0) {$x_2$};
+  \node[neuron] (h1) at (3.6,1.0) {$h_1$\\[-2pt]\tiny ReLU};
+  \node[neuron] (h2) at (3.6,-1.0) {$h_2$\\[-2pt]\tiny ReLU};
+  \node[neuron] (y) at (6.8,0) {$\hat y$\\[-2pt]\tiny linear};
+  \draw[->,thick] (x1) -- node[lab,pos=0.5,above]{$+1$} (h1);
+  \draw[->,thick] (x2) -- node[lab,pos=0.5,below]{$+1$} (h2);
+  \draw[->,thick] (x2) -- node[lab,pos=0.78,left=2pt]{$-1$} (h1);
+  \draw[->,thick] (x1) -- node[lab,pos=0.78,left=2pt]{$-1$} (h2);
+  \draw[->,thick] (h1) -- node[lab,above right]{$+1$} (y);
+  \draw[->,thick] (h2) -- node[lab,below right]{$+1$} (y);
+  \node[font=\footnotesize,above=1pt of h1]{$b=0$};
+  \node[font=\footnotesize,below=1pt of h2]{$b=0$};
+  \node[font=\footnotesize,above=1pt of y]{$b=0$};
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\begin{tabular}{@{}cc|rr|rr|cc@{}}\toprule
+$x_1$&$x_2$& $z_1=x_1-x_2$ & $h_1$ & $z_2=x_2-x_1$ & $h_2$ & $\hat y$ & $x_1\oplus x_2$\\\midrule
+0&0& 0 & 0 & 0 & 0 & 0 & 0\\
+0&1& $-1$ & 0 & 1 & 1 & 1 & 1\\
+1&0& 1 & 1 & $-1$ & 0 & 1 & 1\\
+1&1& 0 & 0 & 0 & 0 & 0 & 0\\\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Why a single neuron is not enough.} The two diagonals of the square have the same midpoint $(\tfrac12,\tfrac12)$, so every
+affine score satisfies $L(0,0)+L(1,1)=L(0,1)+L(1,0)$, so no threshold can put the two 1-corners on one side and the two
+0-corners on the other, and a single neuron $\sigma(L(x))$, $\sigma$ monotone, cannot separate them (XOR is not linearly separable).
+
+\emph{Two hidden units are the minimum.} With one hidden ReLU unit, $\hat y=c\,r(x)+d$ with $r=\mathrm{ReLU}(L(x))$, so $r$
+must take one value $r_0$ on $\{(0,0),(1,1)\}$ and a different value $r_1$ on $\{(0,1),(1,0)\}$. If $r_0>0$, then $L(0,0)=L(1,1)=r_0$
+and $L(0,1)+L(1,0)=2r_0>0$, so $r_1>0$ and $L(0,1)=L(1,0)=r_1=r_0$: contradiction. If $r_0=0$, then
+$L(0,0)+L(1,1)\le 0$, while $r_1>0$ forces $L(0,1)+L(1,0)=2r_1>0$: contradiction with the midpoint identity.
+
+%======================================================================
+\section*{Task 2. How many parameters are in this network?}
+%======================================================================
+Output side $H_\text{out}=\lfloor (H+2p-k)/s\rfloor+1$; a convolution has $k^2C_\text{in}C_\text{out}+C_\text{out}$ parameters,
+a dense layer $N_\text{in}N_\text{out}+N_\text{out}$; ReLU and max-pool have none.
+
+\begin{center}
+\begin{tabular}{@{}l l l r r@{}}\toprule
+Layer & side computation & output shape & parameter computation & parameters\\\midrule
+input & & $224\times224\times3$ & & 0\\
+C1 & $\lfloor(224+6-7)/2\rfloor+1=112$ & $112\times112\times64$ & $7^2\cdot3\cdot64+64$ & 9\,472\\
+P1 & $\lfloor(112-3)/2\rfloor+1=55$ & $55\times55\times64$ & --- & 0\\
+C2 & $\lfloor(55+4-5)/1\rfloor+1=55$ & $55\times55\times192$ & $5^2\cdot64\cdot192+192$ & 307\,392\\
+P2 & $\lfloor(55-3)/2\rfloor+1=27$ & $27\times27\times192$ & --- & 0\\
+C3 & $\lfloor(27+2-3)/1\rfloor+1=27$ & $27\times27\times384$ & $3^2\cdot192\cdot384+384$ & 663\,936\\
+C4 & $27$ & $27\times27\times256$ & $3^2\cdot384\cdot256+256$ & 884\,992\\
+C5 & $27$ & $27\times27\times256$ & $3^2\cdot256\cdot256+256$ & 590\,080\\
+P3 & $\lfloor(27-3)/2\rfloor+1=13$ & $13\times13\times256$ & --- & 0\\
+F6 & flatten $13\cdot13\cdot256=43\,264$ & $512$ & $43\,264\cdot512+512$ & 22\,151\,680\\
+F7 & & $256$ & $512\cdot256+256$ & 131\,328\\
+F8 & & $10$ & $256\cdot10+10$ & 2\,570\\\midrule
+\multicolumn{4}{@{}l}{\textbf{Total}} & \textbf{24\,741\,450}\\\bottomrule
+\end{tabular}
+\end{center}
+Convolutions hold $9\,472+307\,392+663\,936+884\,992+590\,080=2\,455\,872$ parameters; the dense layers hold
+$22\,151\,680+131\,328+2\,570=22\,285\,578$. The first dense layer alone is $89.5\%$ of the network.
+
+%======================================================================
+\section*{Task 3. Softmax is a probability mass function}
+%======================================================================
+\subsection*{(a)}
+Fix any $z\in\mathbb R^K$. The exponential maps $\mathbb R$ into $(0,\infty)$, so $e^{z_j}>0$ for every $j$, and the
+normaliser $D=\sum_{j=1}^K e^{z_j}$ is a finite sum of $K$ positive real numbers, hence $0<D<\infty$. Therefore
+\[
+s_i(z)=\frac{e^{z_i}}{D}>0\qquad\text{for every class } i=1,\dots,K .
+\]
+Summing over the classes, the common denominator comes out of the sum:
+\[
+\sum_{i=1}^K s_i(z)=\frac{1}{D}\sum_{i=1}^K e^{z_i}=\frac{D}{D}=1 .
+\]
+(For $K\ge2$ this also gives $s_i<1$.) The vector $s(z)$ is nonnegative (indeed positive) and sums to one over
+$\{1,\dots,K\}$, which is exactly the definition of a probability mass function on the $K$ classes.
+
+\subsection*{(b)}
+The normalisation in (a) is the finite sum $\sum_{j=1}^K$ over the class index, and the output is one number per class:
+$s$ is a function on the finite set $\{1,\dots,K\}$, and the probability of a set of classes $A$ is $\sum_{i\in A}s_i$.
+A density is a function $f(t)$ of a continuous outcome $t$, normalised by $\int f(t)\,dt=1$, and gives probabilities as
+integrals $P(t\in A)=\int_A f(t)\,dt$. Softmax has no continuous outcome in it: its argument $z$ is the vector of scores,
+not the outcome, and the outcome is the class label. If the class probabilities came from a density on a continuous
+line, every single outcome would have probability $\int_{\{i\}}f(t)\,dt=0$, because a point has length zero; but by (a)
+softmax gives each class the strictly positive probability $s_i>0$. So $s$ is not a density: its normalisation is a sum
+over the classes, not an integral over an outcome.
+
+%======================================================================
+\section*{Task 4. A dot product does not know the seat}
+%======================================================================
+Notation: $q_i^\top, k_i^\top, v_i^\top$ are the $i$-th rows of $Q,K,V$; $(P)_{i,\pi(i)}=1$, so $(PM)_{i,:}=M_{\pi(i),:}$ and
+$(MP^\top)_{:,j}=M_{:,\pi(j)}$ for any matrix $M$ with $n$ rows/columns.
+
+\subsection*{(a) The score is a dot product}
+$(QK^\top)_{ij}=\sum_{l}Q_{il}K_{jl}=q_i^\top k_j$. After reordering, $Q'=(PX)W_Q=P(XW_Q)=PQ$ and likewise $K'=PK$, so
+$q'_i=q_{\pi(i)}$ and $k'_j=k_{\pi(j)}$: the query in seat $i$ is the old query of the token that moved there. Hence
+\[
+(q'_i)^\top k'_j=q_{\pi(i)}^\top k_{\pi(j)},\qquad\text{i.e.}\qquad Q'K'^\top=P\,(QK^\top)P^\top .
+\]
+Follow one token that moves from seat 1 to seat 3 ($\pi(3)=1$): the dot products of its query with the other tokens' keys are
+the same numbers as before, they are now found in row 3 instead of row 1 (and its key's dot products in column 3 instead of column 1).
+
+\emph{Two tokens}, $u=(1,0)$, $v=(0,1)$, $W_Q=W_K=I$, so the scores are dot products of the rows.
+\begin{center}
+\begin{tabular}{c|cc}
+$X=\binom{u}{v}$ & seat 1 ($u$) & seat 2 ($v$)\\\hline
+seat 1 ($u$) & $u\!\cdot\!u=1$ & $u\!\cdot\!v=0$\\
+seat 2 ($v$) & $v\!\cdot\!u=0$ & $v\!\cdot\!v=1$
+\end{tabular}
+\qquad
+\begin{tabular}{c|cc}
+$PX=\binom{v}{u}$ & seat 1 ($v$) & seat 2 ($u$)\\\hline
+seat 1 ($v$) & $v\!\cdot\!v=1$ & $v\!\cdot\!u=0$\\
+seat 2 ($u$) & $u\!\cdot\!v=0$ & $u\!\cdot\!u=1$
+\end{tabular}
+\end{center}
+The four numbers are the same. What moved: $u\!\cdot\!u$ went from entry $(1,1)$ to $(2,2)$, $v\!\cdot\!v$ from $(2,2)$ to $(1,1)$,
+$u\!\cdot\!v$ from $(1,2)$ to $(2,1)$ and $v\!\cdot\!u$ from $(2,1)$ to $(1,2)$. (With these orthonormal tokens the two matrices
+even look identical; the labels show that every entry changed seat.)
+
+\subsection*{(b) The whole layer follows the tokens}
+Let $S=QK^\top/\sqrt{d_k}$ and $A=\mathrm{softmax}_\text{row}(S)$. By (a), the reordered scores are $S'=PSP^\top$, i.e.
+$S'_{ij}=S_{\pi(i)\pi(j)}$. Row $i$ of $S'$ is row $\pi(i)$ of $S$ with its entries reordered by $\pi$. Softmax acts on each
+row separately and the softmax of a reordered vector is the reordered softmax, so
+\[
+A'_{ij}=\mathrm{softmax}(S'_{i,:})_j=\mathrm{softmax}(S_{\pi(i),:})_{\pi(j)}=A_{\pi(i)\pi(j)},\qquad A'=PAP^\top .
+\]
+With $V'=PXW_V=PV$ and $P^\top P=I$:
+\[
+\mathrm{Att}(PX)=A'V'=PAP^\top PV=PAV=P\,\mathrm{Att}(X).
+\]
+So the output row that belongs to a given token is the same vector whatever seat the token sits in; it simply moves with
+the token to its new row.
+
+\emph{Two tokens} ($W_V=I$, factor $1/\sqrt{d_k}$ dropped). The score matrix is $I$ in both orders, and
+$\mathrm{softmax}(1,0)=(\tfrac{e}{1+e},\tfrac{1}{1+e})=(0.7311,\,0.2689)$:
+\[
+\mathrm{Att}(X)=\begin{pmatrix}0.7311&0.2689\\0.2689&0.7311\end{pmatrix}\!\begin{pmatrix}1&0\\0&1\end{pmatrix}
+=\begin{pmatrix}0.7311&0.2689\\0.2689&0.7311\end{pmatrix}\begin{matrix}\leftarrow u\\ \leftarrow v\end{matrix}
+\]
+\[
+\mathrm{Att}(PX)=\begin{pmatrix}0.7311&0.2689\\0.2689&0.7311\end{pmatrix}\!\begin{pmatrix}0&1\\1&0\end{pmatrix}
+=\begin{pmatrix}0.2689&0.7311\\0.7311&0.2689\end{pmatrix}\begin{matrix}\leftarrow v\\ \leftarrow u\end{matrix}
+=P\,\mathrm{Att}(X).
+\]
+Token $u$ receives $(0.7311,0.2689)$ in both orders, token $v$ receives $(0.2689,0.7311)$; only the rows changed places.
+
+\subsection*{(c) Position has to enter before the dot product}
+Let $P$ swap seats 1 and 2 and let $E$ have rows $e_1,e_2$ (and $e_3,\dots,e_n$, which $P$ leaves in place). Then
+\[
+PX+E=\begin{pmatrix}x_2+e_1\\x_1+e_2\\x_3+e_3\\\vdots\end{pmatrix},\qquad
+P(X+E)=PX+PE=\begin{pmatrix}x_2+e_2\\x_1+e_1\\x_3+e_3\\\vdots\end{pmatrix},
+\]
+\[
+(PX+E)-P(X+E)=E-PE=\begin{pmatrix}e_1-e_2\\e_2-e_1\\0\\\vdots\end{pmatrix}\neq0
+\]
+whenever $e_1\neq e_2$. So the two inputs differ, and they differ in the very vectors that enter the dot products: the token
+that moved to seat 1 now enters as $x_2+e_1$ instead of carrying its old $x_2+e_2$, so e.g.\ its self-score becomes
+$(x_2+e_1)^\top(x_2+e_1)$ instead of $(x_2+e_2)^\top(x_2+e_2)$ --- the numbers change, not only their seats.
+A stack $F$ of attention layers and of layers that apply one function to every row still satisfies $F(PZ)=PF(Z)$ for any
+input $Z$ (part (b), and row-wise maps commute with row permutations). Applied to $Z=X+E$ this says that ``the tokens moved
+with their encodings'' gives $F(P(X+E))=PF(X+E)$: nothing new. The model, however, receives $PX+E\neq P(X+E)$, so in general
+$F(PX+E)\neq PF(X+E)$: order is visible because the encodings changed the vectors before any dot product was taken.
+
+\emph{Example} ($u,v$ as above, $e_1=(1,0)$, $e_2=(0,0)$, $W_Q=W_K=W_V=I$, no scaling):
+$X+E$ has rows $(2,0),(0,1)$ and scores $\begin{psmallmatrix}4&0\\0&1\end{psmallmatrix}$; $PX+E$ has rows $(1,1),(1,0)$ and scores
+$\begin{psmallmatrix}2&1\\1&1\end{psmallmatrix}$, which is not $P\begin{psmallmatrix}4&0\\0&1\end{psmallmatrix}P^\top=\begin{psmallmatrix}1&0\\0&4\end{psmallmatrix}$.
+The outputs are $\mathrm{Att}(PX+E)=\begin{psmallmatrix}1.000&0.731\\1.000&0.500\end{psmallmatrix}$ versus
+$P\,\mathrm{Att}(X+E)=\begin{psmallmatrix}0.538&0.731\\1.964&0.018\end{psmallmatrix}$.

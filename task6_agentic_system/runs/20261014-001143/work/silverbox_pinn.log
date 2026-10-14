@@ -1,0 +1,54 @@
+exit_code=0 seconds=210.0
+--- stdout ---
+['Ovld1', 'Ovld2', 'V2', 'V1']
+max|y| train 0.17415464886889148 test 0.2051981625071605 std y 0.05498378797962122 std u 0.022334359922593246
+LS fit [3.95989825e+01 1.76047595e+05 5.74918139e+05 1.60012649e+05]
+init a,b,c,g 39.59898252884029 176047.59480621605 574918.1385434759 160012.64928195305
+S0 it0 loss=0.13295 t=1.0s a=39.2 b=1.7781e+05 c=5.8067e+05 g=1.6161e+05
+S0 it50 loss=0.0006961 t=4.8s a=40.7 b=1.857e+05 c=6.4488e+05 g=1.9546e+05
+S0 it100 loss=0.00062213 t=8.8s a=40.27 b=1.8559e+05 c=6.9021e+05 g=1.9358e+05
+S0 it150 loss=0.00058776 t=12.6s a=40.24 b=1.8537e+05 c=7.0667e+05 g=1.9357e+05
+S0 done t=16.2s a=40.27 b=1.8536e+05 c=7.0905e+05 g=1.9345e+05
+S1 it0 loss=0.0010573 t=16.3s a=39.88 b=1.8712e+05 c=7.148e+05 g=1.9505e+05
+S1 it50 loss=0.00085965 t=18.4s a=40.05 b=1.8538e+05 c=7.3399e+05 g=1.9259e+05
+S1 it100 loss=0.00094041 t=20.6s a=40.05 b=1.8555e+05 c=7.5005e+05 g=1.9313e+05
+S1 it150 loss=0.00087981 t=22.7s a=40.09 b=1.8548e+05 c=7.5326e+05 g=1.9321e+05
+S1 it200 loss=0.00086539 t=24.8s a=40.2 b=1.855e+05 c=7.5543e+05 g=1.9313e+05
+S1 it250 loss=0.00078135 t=26.9s a=40.23 b=1.8547e+05 c=7.5483e+05 g=1.9345e+05
+S1 it300 loss=0.00089144 t=29.0s a=40.3 b=1.854e+05 c=7.5515e+05 g=1.9354e+05
+S1 it350 loss=0.00085562 t=31.1s a=40.35 b=1.8548e+05 c=7.5448e+05 g=1.9358e+05
+S1 it400 loss=0.00088126 t=33.2s a=40.33 b=1.8547e+05 c=7.5423e+05 g=1.9366e+05
+S1 it450 loss=0.00093529 t=35.4s a=40.33 b=1.8545e+05 c=7.5482e+05 g=1.9374e+05
+S1 done t=37.5s a=40.34 b=1.8542e+05 c=7.5486e+05 g=1.937e+05
+S2 it0 loss=0.00079057 t=37.7s a=40.74 b=1.8366e+05 c=7.4911e+05 g=1.921e+05
+S2 it50 loss=0.0004714 t=46.4s a=40.67 b=1.8496e+05 c=7.5104e+05 g=1.9478e+05
+S2 it100 loss=0.00046267 t=54.9s a=40.8 b=1.8494e+05 c=7.5165e+05 g=1.9497e+05
+S2 it150 loss=0.00051248 t=63.2s a=40.82 b=1.8499e+05 c=7.5258e+05 g=1.9539e+05
+S2 it200 loss=0.00045064 t=71.7s a=40.92 b=1.8495e+05 c=7.5325e+05 g=1.9535e+05
+S2 it250 loss=0.00045179 t=79.9s a=40.93 b=1.8492e+05 c=7.5324e+05 g=1.9547e+05
+S2 it300 loss=0.00044533 t=88.9s a=40.95 b=1.8493e+05 c=7.5341e+05 g=1.9553e+05
+S2 it350 loss=0.00044537 t=97.6s a=40.96 b=1.8493e+05 c=7.5317e+05 g=1.9558e+05
+S2 done t=105.9s a=40.96 b=1.8494e+05 c=7.5315e+05 g=1.9557e+05
+S3 it0 loss=0.00032815 t=106.6s a=41.35 b=1.8318e+05 c=7.474e+05 g=1.9397e+05
+S3 it50 loss=0.00033453 t=139.9s a=41.11 b=1.8493e+05 c=7.4646e+05 g=1.958e+05
+S3 it100 loss=0.00033408 t=171.1s a=41.16 b=1.8487e+05 c=7.4746e+05 g=1.9586e+05
+S3 budget stop at it 109
+S3 done t=176.1s a=41.17 b=1.8484e+05 c=7.4747e+05 g=1.9586e+05
+Stage 4 full train rollout
+S4 it0 loss=0.00045411 t=179.7s
+S4 it1 loss=0.00058685 t=183.3s
+S4 it2 loss=0.0004639 t=187.1s
+S4 it3 loss=0.00047993 t=190.8s
+S4 it4 loss=0.00050838 t=194.7s
+S4 it5 loss=0.00049064 t=198.5s
+S4 it6 loss=0.00046683 t=202.7s
+S4 it7 loss=0.00045714 t=206.4s
+max|yhat| 0.2068280213855001 zero-predictor test RMSE 0.060491854406981314
+final a=41.19 b=1.848e+05 c=7.4768e+05 g=1.9608e+05 runtime=207.6s
+TRAIN_RMSE=0.0014457934186479073
+TEST_RMSE=0.0010088887947707441
+
+--- stderr ---
+C:\Users\erik_\PyCharmMiscProject\hw2\task6_agentic_system\runs\20261014-001143\work\silverbox_pinn.py:93: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:821.)
+  a, b, c, g = [float(p) for p in model.phys()]
